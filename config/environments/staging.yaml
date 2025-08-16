@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2025 Wag-Tail Pty Ltd
+
+# Staging Environment Configuration - OSS Edition
+# Production-like settings for testing
+
+llm:
+  provider: "openai"
+  model: "gpt-3.5-turbo"
+  api_key: ""  # Set via OPENAI_API_KEY environment variable
+  timeout: 90
+
+security:
+  enable_pii_detection: true
+  enable_code_detection: true
+  max_prompt_length: 10000
+  pii_confidence_threshold: 0.8
+
+api:
+  default_api_key: "${STAGING_API_KEY}"
+  max_request_size_mb: 8
+  rate_limit_per_minute: 200
+
+logging:
+  level: "INFO"
+  file: "logs/staging.log"
+  format: "json"
+  max_size_mb: 50
+  backup_count: 10
+  log_requests: true
+  log_responses: false
+  mask_sensitive_data: true
+
+plugins:
+  enabled:
+    - "wag_tail_key_auth"
+    - "wag_tail_basic_guard"
+    - "wag_tail_pii_guard"
+    # - "wag_tail_webhook_guardrail" # Advanced Edition only
+
+webhook:
+  enabled: true
+  url: "${STAGING_WEBHOOK_URL}"
+  timeout: 15
+  retry_attempts: 2
+  hmac_secret: "${STAGING_WEBHOOK_SECRET}"
+
+health:
+  check_llm_connectivity: true
+  check_external_services: true
+
+performance:
+  workers: 2
+  request_timeout: 300
+  keepalive_timeout: 5
+  max_concurrent_requests: 50
+
+development:
+  hot_reload: false
+  debug_mode: false
+  log_sql_queries: false

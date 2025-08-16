@@ -1,0 +1,108 @@
+name: Question/Support
+description: Ask a question or get help
+title: "[QUESTION] "
+labels: ["question", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about Wag-Tail AI Gateway? We're here to help!
+        
+        **For security vulnerabilities, please use our [Security Policy](../../SECURITY.md) instead.**
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to know?
+      placeholder: How do I...? Why does...? What is the best way to...?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: What category does your question fall into?
+      options:
+        - Installation/Setup
+        - Configuration
+        - Authentication
+        - Security Features
+        - Performance/Optimization
+        - Plugin Development
+        - Admin API
+        - LLM Integration
+        - Deployment
+        - Troubleshooting
+        - Best Practices
+        - Architecture/Design
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Please provide relevant context for your question
+      placeholder: |
+        I'm trying to...
+        My setup includes...
+        I've already tried...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of Wag-Tail AI Gateway are you using?
+      placeholder: "v4.0.0"
+
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition
+      description: Which edition are you using?
+      options:
+        - Open Source (no license.key)
+        - Enterprise (with license.key)
+        - Planning to use
+        - Unsure
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (Optional)
+      description: Your environment details if relevant
+      placeholder: |
+        - OS: macOS 15.1
+        - Python: 3.11.13
+        - Deployment: Docker/Local/Cloud
+      render: markdown
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What Have You Tried?
+      description: What have you already attempted to solve this?
+      placeholder: |
+        I've looked at...
+        I've tried...
+        I've read...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues and discussions
+          required: true
+        - label: I have checked the documentation
+          required: true
+        - label: This is not a security vulnerability
+          required: true

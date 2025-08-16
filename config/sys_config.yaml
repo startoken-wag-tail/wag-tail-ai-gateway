@@ -1,0 +1,161 @@
+# Wag-Tail AI Gateway - OSS Edition Configuration
+# Simplified configuration for open source deployment
+
+# ===== LLM PROVIDER CONFIGURATION =====
+llm:
+  # Primary LLM provider - choose one:
+  # Options: "ollama", "openai", "gemini", "azure"
+  provider: "ollama"
+  model: "mistral"
+  
+  # API Configuration
+  api_url: "http://localhost:11434/api/generate"  # Ollama default
+  api_key: ""  # Leave empty for Ollama, set for cloud providers
+  timeout: 60  # Request timeout in seconds
+  
+  # For OpenAI:
+  # provider: "openai"
+  # model: "gpt-3.5-turbo"
+  # api_key: "${OPENAI_API_KEY}"
+  
+  # For Google Gemini:
+  # provider: "gemini"
+  # model: "gemini-pro"
+  # api_key: "${GEMINI_API_KEY}"
+  
+  # For Azure OpenAI:
+  # provider: "azure"
+  # model: "gpt-35-turbo"
+  # api_url: "https://your-resource.openai.azure.com"
+  # api_key: "${AZURE_OPENAI_API_KEY}"
+
+# ===== SECURITY CONFIGURATION =====
+security:
+  # PII Detection (Microsoft Presidio)
+  enable_pii_detection: true
+  pii_confidence_threshold: 0.8
+  mask_pii_in_logs: true
+  
+  # Code Detection
+  enable_code_detection: true
+  block_code_execution: true
+  
+  # Input Validation
+  max_prompt_length: 10000
+  min_prompt_length: 1
+  block_empty_prompts: true
+  
+  # Regex Security Filters
+  injection_patterns:
+    - "(select\\s+\\*\\s+from\\s+)"     # SQL injection
+    - "(drop\\s+table\\s+)"             # SQL DROP commands  
+    - "(insert\\s+into\\s+)"            # SQL INSERT commands
+    - "(delete\\s+from\\s+)"            # SQL DELETE commands
+    - "(update\\s+.+\\s+set\\s+)"       # SQL UPDATE commands
+    - "(union\\s+select\\s+)"           # SQL UNION attacks
+    - "(exec\\s*\\()"                   # Code execution
+    - "(eval\\s*\\()"                   # JavaScript eval
+    - "(<script[^>]*>)"                 # XSS scripts
+    - "(javascript\\s*:)"               # JavaScript protocol
+    - "(vbscript\\s*:)"                 # VBScript protocol
+    - "(on\\w+\\s*=)"                   # HTML event handlers
+    
+  # Output filtering patterns
+  output_block_patterns:
+    - "(password\\s*[:=]\\s*\\w+)"      # Passwords
+    - "(secret\\s*[:=]\\s*\\w+)"        # Secrets
+    - "(token\\s*[:=]\\s*\\w+)"         # Tokens
+    - "(key\\s*[:=]\\s*\\w+)"           # API keys
+    - "(credit\\s+card\\s*[:=]\\s*\\d+)" # Credit cards
+
+# ===== API CONFIGURATION =====
+api:
+  # Default API key for testing (change in production!)
+  default_api_key: "demo-key-for-testing"
+  
+  # Request limits
+  max_request_size_mb: 10
+  rate_limit_per_minute: 100
+  
+  # CORS settings
+  cors_origins: ["*"]  # Restrict in production
+  cors_credentials: true
+
+# ===== LOGGING CONFIGURATION =====
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/wag_tail_gateway.log"
+  max_size_mb: 50
+  backup_count: 5
+  format: "json"  # json or text
+  
+  # Security logging
+  log_requests: true
+  log_responses: false  # Set to true for debugging
+  mask_sensitive_data: true
+
+# ===== WEBHOOK CONFIGURATION =====
+# External GuardRail system integration
+webhook:
+  enabled: false
+  url: ""  # Set to your external GuardRail endpoint
+  timeout: 10
+  retry_attempts: 2
+  hmac_secret: ""  # HMAC signature secret for webhook security
+  
+  # Headers to send with webhook requests
+  headers:
+    "Content-Type": "application/json"
+    "User-Agent": "Wag-Tail-OSS/1.0"
+
+# ===== HEALTH CHECK CONFIGURATION =====
+health:
+  check_llm_connectivity: true
+  check_external_services: false
+
+# ===== PERFORMANCE TUNING =====
+performance:
+  # Worker configuration (for production deployment)
+  workers: 1  # Increase for production (e.g., CPU cores * 2)
+  
+  # Timeouts
+  request_timeout: 300  # 5 minutes for long LLM responses
+  keepalive_timeout: 5
+  
+  # Limits
+  max_concurrent_requests: 100
+
+# ===== DEVELOPMENT SETTINGS =====
+development:
+  # Only used in development mode
+  hot_reload: true
+  debug_mode: false
+  log_sql_queries: false
+
+# ===== PLUGIN CONFIGURATION =====
+plugins:
+  # Basic plugins included in OSS edition
+  enabled:
+    - "wag_tail_key_auth"        # API key authentication
+    - "wag_tail_basic_guard"     # Regex and code detection
+    - "wag_tail_pii_guard"       # PII detection and masking
+    # - "wag_tail_webhook_guardrail" # External GuardRail integration (Advanced Edition only)
+  
+  # Plugin-specific settings
+  basic_guard:
+    strict_mode: true
+    block_suspicious_patterns: true
+  
+  pii_guard:
+    languages: ["en"]  # Supported languages
+    entities: ["EMAIL_ADDRESS", "PHONE_NUMBER", "SSN", "CREDIT_CARD", "PERSON", "LOCATION"]
+    anonymize_method: "mask"  # mask, replace, redact
+
+# ===== ENVIRONMENT OVERRIDES =====
+# These settings can be overridden with environment variables:
+# WAGTAIL_LLM_PROVIDER, WAGTAIL_LLM_API_KEY, etc.
+#
+# Example:
+# export WAGTAIL_LLM_PROVIDER="openai"
+# export WAGTAIL_LLM_API_KEY="your-openai-key"
+# export WAGTAIL_LOGGING_LEVEL="DEBUG"

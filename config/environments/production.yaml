@@ -1,0 +1,97 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2025 Wag-Tail Pty Ltd
+
+# Production Environment Configuration - OSS Edition
+# Optimized for production deployment
+
+llm:
+  provider: "${LLM_PROVIDER}"
+  model: "${LLM_MODEL}"
+  api_key: "${LLM_API_KEY}"
+  api_url: "${LLM_API_URL}"
+  timeout: 60
+
+security:
+  enable_pii_detection: true
+  enable_code_detection: true
+  max_prompt_length: 8000  # Stricter in production
+  min_prompt_length: 1
+  block_empty_prompts: true
+  pii_confidence_threshold: 0.9  # Higher confidence in production
+  
+  # Security patterns (production-hardened)
+  injection_patterns:
+    - "(select\\s+\\*\\s+from\\s+)"
+    - "(drop\\s+table\\s+)"
+    - "(insert\\s+into\\s+)"
+    - "(delete\\s+from\\s+)"
+    - "(update\\s+.+\\s+set\\s+)"
+    - "(union\\s+select\\s+)"
+    - "(exec\\s*\\()"
+    - "(eval\\s*\\()"
+    - "(<script[^>]*>)"
+    - "(javascript\\s*:)"
+
+api:
+  default_api_key: "${PRODUCTION_API_KEY}"
+  max_request_size_mb: 5  # Restrict in production
+  rate_limit_per_minute: 100
+  cors_origins: ["${ALLOWED_ORIGIN}"]  # Restrict CORS
+  cors_credentials: false
+
+logging:
+  level: "INFO"
+  file: "/var/log/wagtail/gateway.log"
+  format: "json"
+  max_size_mb: 100
+  backup_count: 20
+  log_requests: true
+  log_responses: false
+  mask_sensitive_data: true
+
+plugins:
+  enabled:
+    - "wag_tail_key_auth"
+    - "wag_tail_basic_guard"
+    - "wag_tail_pii_guard"
+    # - "wag_tail_webhook_guardrail" # Advanced Edition only
+  
+  # Plugin configurations
+  basic_guard:
+    strict_mode: true
+    block_suspicious_patterns: true
+  
+  pii_guard:
+    languages: ["en"]
+    entities: ["EMAIL_ADDRESS", "PHONE_NUMBER", "SSN", "CREDIT_CARD", "PERSON", "LOCATION"]
+    anonymize_method: "mask"
+
+webhook:
+  enabled: "${WEBHOOK_ENABLED:false}"
+  url: "${WEBHOOK_URL}"
+  timeout: 10
+  retry_attempts: 2
+  hmac_secret: "${WEBHOOK_SECRET}"
+  headers:
+    "Content-Type": "application/json"
+    "User-Agent": "Wag-Tail-OSS/1.0"
+
+health:
+  check_llm_connectivity: true
+  check_external_services: false
+
+performance:
+  workers: 4  # Scale based on CPU cores
+  request_timeout: 180  # Shorter timeout in production
+  keepalive_timeout: 5
+  max_concurrent_requests: 100
+
+# Production-specific security and performance settings
+cors_origins: ["${ALLOWED_ORIGIN}"]
+hide_server_info: true
+disable_debug_endpoints: true
+
+development:
+  hot_reload: false
+  debug_mode: false
+  log_sql_queries: false

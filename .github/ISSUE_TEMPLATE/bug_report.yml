@@ -1,0 +1,149 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out this form as completely as possible.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug Summary
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the bug in 1-2 sentences
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Configure the gateway with...
+        2. Send a request to...
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: The gateway should have...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: Instead, the gateway...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component is affected?
+      options:
+        - Core API
+        - Authentication
+        - Security (PII, AI classification, etc.)
+        - Caching (Semantic cache)
+        - LLM Routing
+        - Admin API
+        - Plugin System
+        - Configuration
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of Wag-Tail AI Gateway are you running?
+      placeholder: "v4.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition
+      description: Which edition are you using?
+      options:
+        - Open Source (no license.key)
+        - Enterprise (with license.key)
+        - Unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your environment details
+      placeholder: |
+        - OS: macOS 15.1
+        - Python: 3.11.13
+        - Redis: 7.0.0
+        - PostgreSQL: 15.0 (if using enterprise)
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration (Optional)
+      description: Relevant configuration (remove any sensitive data)
+      placeholder: |
+        ```yaml
+        # config/sys_config.yaml (redacted)
+        llm:
+          provider: "openai"
+          model: "gpt-3.5-turbo"
+        ```
+      render: yaml
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs/Error Messages
+      description: Relevant log output or error messages (remove any sensitive data)
+      placeholder: |
+        ```
+        ERROR: Authentication failed for API key xxx...
+        ```
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem
+      placeholder: This started happening after...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched for existing issues
+          required: true
+        - label: I have removed sensitive data from logs/config
+          required: true
+        - label: I can reproduce this issue consistently
+          required: false

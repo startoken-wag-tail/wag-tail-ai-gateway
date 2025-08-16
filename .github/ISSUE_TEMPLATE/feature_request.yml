@@ -1,0 +1,133 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[FEATURE] "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please describe your idea in detail.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: A clear and concise description of the feature you'd like to see
+      placeholder: I would like to see...
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem/Use Case
+      description: What problem does this feature solve? What's your use case?
+      placeholder: |
+        Currently, when I try to..., I face the following problem...
+        This feature would help me...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work?
+      placeholder: |
+        I suggest implementing...
+        The API could work like...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component would this feature affect?
+      options:
+        - Core API
+        - Authentication
+        - Security (PII, AI classification, etc.)
+        - Caching (Semantic cache)
+        - LLM Routing
+        - Admin API
+        - Plugin System
+        - Configuration
+        - Documentation
+        - Performance
+        - Monitoring/Observability
+        - New Component
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve my workflow
+        - High - Important for my use case
+        - Critical - Blocking my adoption
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: |
+        I've tried..., but it doesn't work because...
+        Another approach could be..., but...
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Ideas (Optional)
+      description: If you have ideas about how this could be implemented
+      placeholder: |
+        This could be implemented by...
+        The configuration might look like...
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples/Mockups (Optional)
+      description: Any examples, code snippets, or mockups
+      placeholder: |
+        ```python
+        # Example usage
+        gateway.configure_feature(...)
+        ```
+      render: markdown
+
+  - type: checkboxes
+    id: edition
+    attributes:
+      label: Edition Preference
+      description: Which edition should this feature target?
+      options:
+        - label: Open Source Edition
+          required: false
+        - label: Enterprise Edition
+          required: false
+        - label: Both Editions
+          required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched for existing feature requests
+          required: true
+        - label: This feature aligns with the project's goals
+          required: true
+        - label: I understand this is a community project and features take time
+          required: true

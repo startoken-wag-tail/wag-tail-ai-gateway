@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2025 Wag-Tail Pty Ltd
+
+# Development Environment Configuration - OSS Edition
+# Optimized for local development
+
+llm:
+  provider: "ollama"
+  model: "mistral"
+  api_url: "http://localhost:11434/api/generate"
+  timeout: 60
+
+security:
+  enable_pii_detection: true
+  enable_code_detection: true
+  max_prompt_length: 15000  # More lenient in development
+
+api:
+  default_api_key: "dev-key-12345"
+
+logging:
+  level: "DEBUG"
+  file: "logs/development.log"
+  format: "text"
+  log_requests: true
+  log_responses: true
+
+plugins:
+  enabled:
+    - "wag_tail_key_auth"
+    - "wag_tail_basic_guard"
+    - "wag_tail_pii_guard"
+    # - "wag_tail_webhook_guardrail" # Advanced Edition only
+
+webhook:
+  enabled: false  # Disable webhook in development
+  timeout: 30
+
+health:
+  check_llm_connectivity: true
+  check_external_services: false
+
+performance:
+  workers: 1
+  request_timeout: 300
+  max_concurrent_requests: 10
+
+development:
+  hot_reload: true
+  debug_mode: true
+  log_sql_queries: false
