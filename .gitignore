@@ -251,3 +251,5 @@ test_output/
 # Local development overrides
 local_config/
 dev_overrides/
+# Temporary upload files
+.tmp.driveupload/
