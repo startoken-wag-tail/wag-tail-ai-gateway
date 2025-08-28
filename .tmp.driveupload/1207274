@@ -4,3 +4,5 @@
 55c9c75d79cf1bd99f9cca347c039c266aac4953 9ffb8638762aa979c97a8f1484426ed80ddebbec Wag-Tail Buddy <opensource@wag-tail.com> 1755321707 +0800	commit: Clean up temporary files
 9ffb8638762aa979c97a8f1484426ed80ddebbec d4620357ba88fb89d7eb870e81de37873a70af61 startoken-wag-tail <opensource@wag-tail.com> 1755430215 +0800	commit: Add groups vs environments architecture documentation
 d4620357ba88fb89d7eb870e81de37873a70af61 540cfa3565aaa63af4836df01ea09eca124da72b startoken-wag-tail <opensource@wag-tail.com> 1756381514 +0800	commit: feat: Remove health checks from request processing for better performance
+540cfa3565aaa63af4836df01ea09eca124da72b 138d585a248f64a6dc8caa460e9fe8fe654d5a86 startoken-wag-tail <opensource@wag-tail.com> 1756381685 +0800	commit: chore: Update version to 4.3.0
+138d585a248f64a6dc8caa460e9fe8fe654d5a86 21a07b11a04150480315b92af8da2d796353bcd7 startoken-wag-tail <opensource@wag-tail.com> 1756381705 +0800	commit: chore: Clean up temporary files and update gitignore

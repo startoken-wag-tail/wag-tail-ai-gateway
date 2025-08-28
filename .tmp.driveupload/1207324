@@ -1,11 +1,1 @@
-feat: Remove health checks from request processing for better performance
-
-- Removed all health checks during prompt processing (sync and async)
-- Fallback chain now handles provider failures naturally
-- Health monitoring still runs in background for dashboard/alerts
-- Added full LLM provider support (OpenAI, Gemini, Azure, Ollama, Mistral)
-- Updated utilities with latest improvements from main branch
-- Cleaned up test artifacts and temporary files
-
-This improves performance and reliability by eliminating redundant health checks
-that were causing false failures under concurrent load.
+Initial release: Wag-Tail AI Gateway v4.3.0 OSS Edition
