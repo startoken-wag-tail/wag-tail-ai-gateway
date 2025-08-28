@@ -1,0 +1,147 @@
+models:
+- id: mistral-primary
+  name: Mistral 7B Primary
+  local: true
+  model: mistral:7b-instruct-q4_K_M
+  api_url: http://localhost:11434/v1/chat/completions
+  timeout: 30
+  provider: ollama
+- id: mistral-secondary
+  name: Mistral 7B Secondary
+  local: true
+  model: mistral:7b-instruct-q4_K_M
+  api_url: http://localhost:11435/v1/chat/completions
+  timeout: 30
+  provider: ollama
+- id: mistral-tertiary
+  name: Mistral 7B Tertiary
+  local: true
+  model: mistral:7b-instruct-q4_K_M
+  api_url: http://localhost:11436/v1/chat/completions
+  timeout: 30
+  provider: ollama
+- id: openai-gpt4o
+  name: GPT-4o Production
+  local: false
+  model: gpt-4o
+  api_key: ${OPENAI_API_KEY}
+  api_url: https://api.openai.com/v1
+  timeout: 120
+  provider: openai
+- id: openai-gpt4-turbo
+  name: GPT-4 Turbo
+  local: false
+  model: gpt-4-turbo
+  api_key: ${OPENAI_API_KEY}
+  api_url: https://api.openai.com/v1
+  timeout: 90
+  provider: openai
+- id: openai-gpt35-turbo
+  name: GPT-3.5 Turbo
+  local: false
+  model: gpt-3.5-turbo
+  api_key: ${OPENAI_API_KEY}
+  api_url: https://api.openai.com/v1
+  timeout: 60
+  provider: openai
+- id: gemini-flash
+  name: Gemini 2.0 Flash
+  local: false
+  model: gemini-2.0-flash
+  api_key: AIzaSyD5sBrHm-SpllQaB3qQ8Jkhh1IDiyrFncc
+  api_url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+  timeout: 60
+  provider: gemini
+- id: azure-gpt4o
+  name: Azure GPT-4o
+  local: false
+  model: gpt-4o
+  api_key: ${AZURE_API_KEY}
+  timeout: 90
+  provider: azure
+  deployment_name: gpt-4o
+- id: azure-gpt4-turbo
+  name: Azure GPT-4 Turbo
+  local: false
+  model: gpt-4-turbo
+  api_key: ${AZURE_API_KEY}
+  timeout: 90
+  provider: azure
+  deployment_name: gpt-4-turbo
+- id: azure-gpt35-turbo
+  name: Azure GPT-3.5 Turbo
+  local: false
+  model: gpt-35-turbo
+  api_key: ${AZURE_API_KEY}
+  timeout: 60
+  provider: azure
+  deployment_name: gpt-35-turbo
+- id: openai-o1-preview
+  name: O1 Preview
+  local: false
+  model: o1-preview
+  api_key: ${OPENAI_API_KEY}
+  api_url: https://api.openai.com/v1
+  timeout: 300
+  provider: openai
+- id: openai-o1
+  name: O1
+  local: false
+  model: o1
+  api_key: ${OPENAI_API_KEY}
+  api_url: https://api.openai.com/v1
+  timeout: 180
+  provider: openai
+instance_groups:
+- id: mistral-cluster
+  name: Mistral Load Balanced Cluster
+  models:
+  - mistral-primary
+  - mistral-secondary
+  - mistral-tertiary
+  weights:
+    mistral-primary: 2
+    mistral-secondary: 1
+    mistral-tertiary: 1
+  load_balancing:
+    strategy: weighted_round_robin
+    failover_threshold: 2
+connection_pools:
+  azure:
+    enabled: true
+    pool_size: 10
+    max_connections: 20
+  gemini:
+    enabled: true
+    pool_size: 5
+    max_connections: 10
+  openai:
+    enabled: true
+    pool_size: 10
+    max_connections: 20
+fallback_chain:
+- ref: mistral-cluster
+  type: instance_group
+- ref: gemini-flash
+  type: model
+- ref: azure-gpt4o
+  type: model
+- ref: azure-gpt4-turbo
+  type: model
+- ref: azure-gpt35-turbo
+  type: model
+- ref: openai-gpt4o
+  type: model
+- ref: openai-gpt4-turbo
+  type: model
+- ref: openai-gpt35-turbo
+  type: model
+- ref: openai-o1-preview
+  type: model
+- ref: openai-o1
+  type: model
+settings:
+  enable_logging: true
+  enable_metrics: true
+  health_check_interval: 30
+  failed_instance_timeout: 60

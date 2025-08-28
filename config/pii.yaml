@@ -1,0 +1,14 @@
+allowed_pii_types:
+  - EMAIL_ADDRESS
+  - PHONE_NUMBER
+  - CREDIT_CARD
+  - HK_ID
+  - US_PASSPORT
+  - BANK_ACCOUNT
+  - US_SSN
+  - NRIC
+  - NRIC_NUMBER
+  - IBAN_CODE
+  - PERSON
+  - IP_ADDRESS
+confidence_threshold: 0.8
