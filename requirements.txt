@@ -25,9 +25,9 @@ openai==1.30.1  # OpenAI GPT models
 # ===== SECURITY & VALIDATION =====
 PyJWT==2.8.0  # For token validation
 
-# ===== BASIC DATABASE SUPPORT =====
-# SQLite support (built into Python)
-# For PostgreSQL support in production, add: psycopg2-binary==2.9.10
+# ===== DATABASE SUPPORT (REQUIRED) =====
+psycopg2-binary==2.9.10  # PostgreSQL driver
+sqlalchemy==2.0.23  # Database ORM
 
 # ===== DEVELOPMENT & TESTING =====
 # For development and testing
@@ -41,8 +41,8 @@ PyJWT==2.8.0  # For token validation
 # ===== NOTES =====
 # 
 # OSS Edition Dependencies:
+# - PostgreSQL REQUIRED for API key management
 # - No Redis dependency (no semantic caching)
-# - No PostgreSQL by default (uses SQLite)
 # - No advanced ML dependencies (transformers, torch, etc.)
 # - No HashiCorp Vault integration
 # - No Langfuse observability
@@ -50,7 +50,6 @@ PyJWT==2.8.0  # For token validation
 # 
 # For cloud deployment, you may want to add:
 # - gunicorn==21.2.0 (WSGI server)
-# - psycopg2-binary==2.9.10 (PostgreSQL)
 # - redis==5.0.4 (if adding caching)
 #
 # Total install size: ~200MB (vs ~2GB for full Enterprise edition)

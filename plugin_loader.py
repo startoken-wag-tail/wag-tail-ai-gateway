@@ -9,7 +9,7 @@ Simplified plugin management for basic security features
 import os
 import importlib
 import importlib.util
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from config_loader import get_plugin_config, is_plugin_enabled
 from wag_tail_logger import logger, security_logger
 
@@ -78,6 +78,7 @@ class PluginManager:
     
     def _create_auth_plugin(self):
         """Create API key authentication plugin"""
+        from database_loader import validate_api_key as db_validate
         from config_loader import get_default_api_key
         
         class AuthPlugin:
@@ -86,14 +87,14 @@ class PluginManager:
                 self.version = "4.3.0"
                 self.default_key = get_default_api_key()
             
-            def authenticate(self, api_key: str) -> bool:
-                """Simple API key validation"""
+            def authenticate(self, api_key: str) -> Tuple[bool, Optional[str], Optional[str]]:
+                """API key validation with database and config fallback"""
                 if not api_key:
-                    return False
+                    return False, None, None
                 
-                # In OSS edition, just check against default key
-                # In production, this would check against a database
-                return api_key == self.default_key
+                # Use database validation with config fallback
+                is_valid, org, user = db_validate(api_key)
+                return is_valid, org, user
             
             def get_status(self) -> Dict[str, Any]:
                 return {

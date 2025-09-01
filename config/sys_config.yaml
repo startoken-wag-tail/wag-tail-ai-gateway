@@ -1,6 +1,16 @@
 # Wag-Tail AI Gateway - OSS Edition Configuration
 # Simplified configuration for open source deployment
 
+# ===== DATABASE CONFIGURATION =====
+database:
+  host: "localhost"
+  port: 5432
+  name: "wag_tail"
+  user: "${DB_USER}"  # Will use system username if not set
+  password: "${DB_PASSWORD}"  # Leave empty for local dev
+  pool_size: 5
+  max_overflow: 10
+
 # ===== LLM PROVIDER CONFIGURATION =====
 llm:
   # Primary LLM provider - choose one:

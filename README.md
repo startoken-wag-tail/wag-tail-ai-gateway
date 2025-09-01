@@ -33,6 +33,11 @@
 
 ---
 
+## 📋 Prerequisites
+
+- **Python 3.9+**
+- **PostgreSQL 12+** (Required for API key management and usage tracking)
+
 ## ⚡ Quick Start (5 Minutes)
 
 ```bash
@@ -45,12 +50,16 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # 2. Install dependencies  
 pip install -r requirements.txt
 
-# 3. Start the gateway
+# 3. Setup PostgreSQL database
+./database/setup.sh
+# Or manually: psql -U your_user -d wag_tail -f database/schema.sql
+
+# 4. Start the gateway
 uvicorn main:app --reload
 
-# 4. Test it works!
+# 5. Test it works!
 curl -X POST http://localhost:8000/chat \
-  -H "X-API-Key: demo-key-for-testing" \
+  -H "X-API-Key: sk-test-key-123" \
   -H "Content-Type: application/json" \
   -d '{"prompt": "What is 2+2?"}'
 ```
