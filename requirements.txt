@@ -1,57 +1,31 @@
-# Wag-Tail AI Gateway - OSS Edition Requirements
-# Minimal dependencies for open source deployment
-
-# ===== CORE API FRAMEWORK =====
+# Core dependencies
 fastapi==0.111.0
-uvicorn==0.35.0
-pydantic==2.11.7
+uvicorn[standard]==0.30.1
+pydantic==2.7.4
+pydantic-settings==2.3.4
 
-# ===== HTTP CLIENT & UTILITIES =====
-requests==2.32.4
-httpx==0.28.1
+# Database
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.31
 
-# ===== CONFIGURATION & LOGGING =====
-pyyaml==6.0.2
+# Security & PII Detection  
+presidio-analyzer==2.2.354
+presidio-anonymizer==2.2.354
+spacy==3.7.5
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+
+# LLM Providers
+requests==2.32.3
+httpx==0.27.0
+aiohttp==3.9.5
+google-generativeai==0.5.4
+openai==1.35.3
+
+# Utilities
+python-multipart==0.0.9
+pyyaml==6.0.1
 python-dotenv==1.0.1
+cryptography==42.0.8
 
-# ===== PII DETECTION & SECURITY =====
-# Microsoft Presidio for PII detection and masking
-presidio-analyzer==2.2.359
-presidio-anonymizer==2.2.359
-
-# ===== LLM PROVIDER INTEGRATIONS =====
-openai==1.30.1  # OpenAI GPT models
-
-# ===== SECURITY & VALIDATION =====
-PyJWT==2.8.0  # For token validation
-
-# ===== DATABASE SUPPORT (REQUIRED) =====
-psycopg2-binary==2.9.10  # PostgreSQL driver
-sqlalchemy==2.0.23  # Database ORM
-
-# ===== DEVELOPMENT & TESTING =====
-# For development and testing
-# pytest==7.4.0
-# pytest-asyncio==0.21.0
-
-# ===== OPTIONAL: PERFORMANCE =====
-# For better JSON performance
-# orjson==3.9.0
-
-# ===== NOTES =====
-# 
-# OSS Edition Dependencies:
-# - PostgreSQL REQUIRED for API key management
-# - No Redis dependency (no semantic caching)
-# - No advanced ML dependencies (transformers, torch, etc.)
-# - No HashiCorp Vault integration
-# - No Langfuse observability
-# - No ChromaDB vector database
-# 
-# For cloud deployment, you may want to add:
-# - gunicorn==21.2.0 (WSGI server)
-# - redis==5.0.4 (if adding caching)
-#
-# Total install size: ~200MB (vs ~2GB for full Enterprise edition)
-# Startup time: ~2 seconds (vs ~10 seconds for Enterprise)
-# Memory usage: ~100MB (vs ~500MB+ for Enterprise)
+# Logging
+colorlog==6.8.2

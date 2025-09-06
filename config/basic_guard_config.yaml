@@ -1,0 +1,45 @@
+classifier_thresholds:
+  attack: 0.9
+  jailbreak: 0.79
+  offensive: 0.81
+  sensitive: 0.8
+  spam: 0.95
+confidence_scores:
+  attack: 0.7
+  jailbreak: 0.35
+  offensive: 0.65
+  sensitive: 0.5
+  spam: 0.75
+  pii: 0.8
+  injection: 0.7
+  code_high_risk: 0.82
+  default: 0.7
+features:
+  enable_classifier: true
+  enable_basic_guard: true
+  enable_pii_detection: true
+  enable_logging: true
+  enable_metrics: true
+  classifier_mode: strict
+risk_levels:
+  critical:
+    action: block
+    confidence_threshold: 0.6
+  high:
+    action: block
+    confidence_threshold: 0.7
+  medium:
+    action: flag
+    confidence_threshold: 0.8
+  low:
+    action: allow
+    confidence_threshold: 0.9
+response_templates:
+  blocked: Content blocked by security policy
+  flagged: Content flagged for review
+  rate_limited: Request rate limit exceeded
+classifier_model:
+  name: DistilBERT
+  version: 1.0.0
+  cache_enabled: true
+  cache_ttl: 3600

@@ -1,190 +1,164 @@
-# Copyright (c) 2025 Startoken Pty Ltd
-# SPDX-License-Identifier: Apache-2.0
-
 """
-Database connection and authentication for OSS Edition
+Database loader for OSS edition
+Handles PostgreSQL connection and API key management
 """
 
 import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from typing import Optional, Dict, Any
 import logging
-from typing import Optional, Tuple
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
-from config_loader import load_config
 
 logger = logging.getLogger(__name__)
 
-class DatabaseConnection:
-    """Manages PostgreSQL database connection"""
-    
-    def __init__(self):
-        self.engine = None
-        self.config = load_config().get("database", {})
-        self._initialize_connection()
-    
-    def _initialize_connection(self):
-        """Initialize database connection"""
-        try:
-            # Get database configuration
-            host = self.config.get("host", "localhost")
-            port = self.config.get("port", 5432)
-            db_name = self.config.get("name", "wag_tail")
-            
-            # Handle user and password with environment variable fallback
-            user = os.getenv("DB_USER", os.getenv("USER", "postgres"))
-            if "${DB_USER}" in str(self.config.get("user", "")):
-                user = os.getenv("DB_USER", os.getenv("USER", "postgres"))
-            else:
-                user = self.config.get("user", user)
-            
-            password = os.getenv("DB_PASSWORD", "")
-            if "${DB_PASSWORD}" in str(self.config.get("password", "")):
-                password = os.getenv("DB_PASSWORD", "")
-            else:
-                password = self.config.get("password", "")
-            
-            # Build connection string
-            if password:
-                conn_str = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
-            else:
-                conn_str = f"postgresql://{user}@{host}:{port}/{db_name}"
-            
-            # Create engine with connection pooling
-            self.engine = create_engine(
-                conn_str,
-                pool_size=self.config.get("pool_size", 5),
-                max_overflow=self.config.get("max_overflow", 10),
-                pool_pre_ping=True,  # Verify connections before use
-                echo=False  # Set to True for SQL debugging
-            )
-            
-            # Test connection
-            with self.engine.connect() as conn:
-                result = conn.execute(text("SELECT 1"))
-                result.fetchone()
-            
-            logger.info(f"✅ Database connected successfully to {db_name}@{host}")
-            
-        except SQLAlchemyError as e:
-            logger.error(f"❌ Database connection failed: {e}")
-            logger.warning("System will use configuration file fallback for API keys")
-            self.engine = None
-        except Exception as e:
-            logger.error(f"❌ Unexpected error connecting to database: {e}")
-            self.engine = None
-    
-    def validate_api_key(self, api_key: str) -> Tuple[bool, Optional[str], Optional[str]]:
-        """
-        Validate API key against database
-        
-        Returns:
-            Tuple of (is_valid, organization, user_id)
-        """
-        if not self.engine or not api_key:
-            return False, None, None
-        
-        try:
-            with self.engine.connect() as conn:
-                query = text("""
-                    SELECT organization, user_id, is_active 
-                    FROM api_keys 
-                    WHERE key = :api_key
-                    AND is_active = true
-                    AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
-                """)
-                
-                result = conn.execute(query, {"api_key": api_key})
-                row = result.fetchone()
-                
-                if row:
-                    organization, user_id, is_active = row
-                    
-                    # Update last_used_at
-                    try:
-                        update_query = text("""
-                            UPDATE api_keys 
-                            SET last_used_at = CURRENT_TIMESTAMP 
-                            WHERE key = :api_key
-                        """)
-                        conn.execute(update_query, {"api_key": api_key})
-                        conn.commit()
-                    except:
-                        pass  # Don't fail on update
-                    
-                    logger.debug(f"API key validated: {api_key[-6:]}")
-                    return True, organization, user_id
-                
-        except SQLAlchemyError as e:
-            logger.error(f"Database error during API key validation: {e}")
-        
-        return False, None, None
-    
-    def log_usage(self, api_key: str, endpoint: str, method: str, 
-                  status_code: int, latency_ms: int):
-        """Log API usage to database"""
-        if not self.engine:
-            return
-        
-        try:
-            with self.engine.connect() as conn:
-                # Get API key ID
-                key_query = text("SELECT id, organization FROM api_keys WHERE key = :api_key")
-                key_result = conn.execute(key_query, {"api_key": api_key})
-                key_row = key_result.fetchone()
-                
-                if key_row:
-                    api_key_id, organization = key_row
-                    
-                    # Insert usage log
-                    insert_query = text("""
-                        INSERT INTO usage_logs 
-                        (api_key_id, organization, endpoint, method, status_code, latency_ms)
-                        VALUES (:api_key_id, :organization, :endpoint, :method, :status_code, :latency_ms)
-                    """)
-                    
-                    conn.execute(insert_query, {
-                        "api_key_id": api_key_id,
-                        "organization": organization,
-                        "endpoint": endpoint,
-                        "method": method,
-                        "status_code": status_code,
-                        "latency_ms": latency_ms
-                    })
-                    conn.commit()
-                    
-        except SQLAlchemyError as e:
-            logger.debug(f"Failed to log usage: {e}")
+# Database configuration from environment or defaults
+DB_CONFIG = {
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": os.getenv("DB_PORT", "5432"),
+    "database": os.getenv("DB_NAME", "wag_tail"),
+    "user": os.getenv("DB_USER", "eddiechui"),
+    "password": os.getenv("DB_PASSWORD", "Chinasky17_")
+}
 
-# Global database connection instance
-_db_connection = None
+def get_db_connection():
+    """Get PostgreSQL database connection"""
+    try:
+        conn = psycopg2.connect(
+            **DB_CONFIG,
+            cursor_factory=RealDictCursor
+        )
+        return conn
+    except psycopg2.Error as e:
+        logger.error(f"Database connection failed: {e}")
+        return None
 
-def get_db_connection() -> DatabaseConnection:
-    """Get or create database connection"""
-    global _db_connection
-    if _db_connection is None:
-        _db_connection = DatabaseConnection()
-    return _db_connection
-
-def validate_api_key(api_key: str) -> Tuple[bool, Optional[str], Optional[str]]:
+def validate_api_key(api_key: str) -> Optional[Dict[str, Any]]:
     """
-    Validate API key with database fallback to config
+    Validate an API key against the database
     
+    Args:
+        api_key: The API key to validate
+        
     Returns:
-        Tuple of (is_valid, organization, user_id)
+        Dict with key details if valid, None otherwise
     """
-    # Try database first
-    db = get_db_connection()
-    is_valid, org, user = db.validate_api_key(api_key)
+    if not api_key:
+        return None
+        
+    conn = get_db_connection()
+    if not conn:
+        # Fallback to config file validation
+        return validate_from_config(api_key)
     
-    if is_valid:
-        return True, org, user
+    try:
+        with conn.cursor() as cursor:
+            # Check API key in database
+            cursor.execute("""
+                SELECT key, organization, org_id, is_active, 
+                       rate_limit, monthly_limit, usage
+                FROM api_keys 
+                WHERE key = %s AND is_active = true
+            """, (api_key,))
+            
+            result = cursor.fetchone()
+            
+            if result:
+                return dict(result)
+            
+    except psycopg2.Error as e:
+        logger.error(f"Database query failed: {e}")
+    finally:
+        conn.close()
     
-    # Fallback to config file (for test key)
-    config = load_config()
-    test_keys = config.get("auth", {}).get("test_keys", [])
+    # Fallback to config file
+    return validate_from_config(api_key)
+
+def validate_from_config(api_key: str) -> Optional[Dict[str, Any]]:
+    """
+    Fallback validation from config file
     
-    if api_key in test_keys or api_key == "sk-test-key-123":
-        logger.debug(f"API key validated from config: {api_key[-6:]}")
-        return True, "default", "test_user"
+    Args:
+        api_key: The API key to validate
+        
+    Returns:
+        Dict with key details if valid, None otherwise
+    """
+    try:
+        import yaml
+        config_path = "config/sys_config.yaml"
+        
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                config = yaml.safe_load(f)
+                
+            # Check if key exists in config
+            api_keys = config.get('security', {}).get('api_keys', {})
+            
+            for org_name, org_data in api_keys.items():
+                if org_data.get('key') == api_key:
+                    return {
+                        'key': api_key,
+                        'organization': org_name,
+                        'org_id': org_data.get('org_id', org_name),
+                        'is_active': True,
+                        'rate_limit': org_data.get('rate_limit', 100),
+                        'monthly_limit': org_data.get('monthly_limit', 10000)
+                    }
+                    
+    except Exception as e:
+        logger.error(f"Config file validation failed: {e}")
     
-    return False, None, None
+    return None
+
+def init_database():
+    """Initialize database tables if they don't exist"""
+    conn = get_db_connection()
+    if not conn:
+        logger.warning("Database not available - running in config-only mode")
+        return False
+    
+    try:
+        with conn.cursor() as cursor:
+            # Create api_keys table if not exists
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS api_keys (
+                    id SERIAL PRIMARY KEY,
+                    key VARCHAR(255) UNIQUE NOT NULL,
+                    organization VARCHAR(255) NOT NULL,
+                    org_id VARCHAR(255),
+                    is_active BOOLEAN DEFAULT true,
+                    rate_limit INTEGER DEFAULT 100,
+                    monthly_limit INTEGER DEFAULT 10000,
+                    usage INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Create usage_logs table if not exists
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS usage_logs (
+                    id SERIAL PRIMARY KEY,
+                    api_key VARCHAR(255) NOT NULL,
+                    endpoint VARCHAR(255),
+                    method VARCHAR(10),
+                    status_code INTEGER,
+                    response_time_ms INTEGER,
+                    tokens_used INTEGER,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            conn.commit()
+            logger.info("Database tables initialized successfully")
+            return True
+            
+    except psycopg2.Error as e:
+        logger.error(f"Database initialization failed: {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+# Initialize on module load
+init_database()

@@ -46,7 +46,7 @@ CREATE INDEX IF NOT EXISTS idx_usage_logs_org ON usage_logs(organization);
 
 -- Insert default test API key for development
 INSERT INTO api_keys (key, organization, description, is_active) 
-VALUES ('sk-test-key-123', 'default', 'Default test key for development', true)
+VALUES ('demo-key-for-testing', 'default', 'Demo key for testing OSS edition', true)
 ON CONFLICT (key) DO NOTHING;
 
 -- Grant permissions (adjust username as needed)

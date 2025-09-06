@@ -50,16 +50,17 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # 2. Install dependencies  
 pip install -r requirements.txt
 
-# 3. Setup PostgreSQL database
-./database/setup.sh
-# Or manually: psql -U your_user -d wag_tail -f database/schema.sql
+# 3. Setup PostgreSQL database (optional - for API key management)
+# Create database and tables:
+psql -U postgres -c "CREATE DATABASE wag_tail;"
+psql -U postgres -d wag_tail -f database/schema.sql
 
 # 4. Start the gateway
 uvicorn main:app --reload
 
 # 5. Test it works!
 curl -X POST http://localhost:8000/chat \
-  -H "X-API-Key: sk-test-key-123" \
+  -H "X-API-Key: demo-key-for-testing" \
   -H "Content-Type: application/json" \
   -d '{"prompt": "What is 2+2?"}'
 ```

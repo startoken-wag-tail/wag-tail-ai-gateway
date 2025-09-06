@@ -1,296 +1,50 @@
-# SPDX-License-Identifier: Apache-2.0
-# Copyright 2025 Wag-Tail Pty Ltd
-
 """
-Plugin loader for Wag-Tail AI Gateway OSS Edition
-Simplified plugin management for basic security features
+Plugin loader for OSS edition
+Loads only the basic security plugins included in OSS
 """
 
 import os
+import sys
 import importlib
-import importlib.util
-from typing import Dict, List, Any, Optional, Tuple
-from config_loader import get_plugin_config, is_plugin_enabled
-from wag_tail_logger import logger, security_logger
+from pathlib import Path
+from typing import List, Any
 
-class PluginManager:
-    """Simplified plugin manager for OSS edition"""
+# Add plugins directory to path
+plugins_dir = Path(__file__).parent / "startoken-plugins"
+if str(plugins_dir) not in sys.path:
+    sys.path.insert(0, str(plugins_dir))
+
+# OSS Edition plugins
+OSS_PLUGINS = [
+    "wag_tail_key_auth",
+    "wag_tail_basic_guard",
+    "wag_tail_pii_guard"
+]
+
+def load_plugins() -> List[Any]:
+    """Load OSS edition plugins"""
+    plugins = []
     
-    def __init__(self):
-        self.loaded_plugins: Dict[str, Any] = {}
-        self.plugin_configs: Dict[str, Dict] = {}
-        
-    def load_plugins(self) -> bool:
-        """Load all enabled plugins"""
+    for plugin_name in OSS_PLUGINS:
         try:
-            plugin_config = get_plugin_config()
-            enabled_plugins = plugin_config.get("enabled", [])
-            
-            logger.info(f"Loading {len(enabled_plugins)} plugins: {enabled_plugins}")
-            
-            # OSS edition only supports these basic plugins
-            oss_plugins = {
-                "wag_tail_key_auth": self._create_auth_plugin,
-                "wag_tail_basic_guard": self._create_basic_guard_plugin,  
-                "wag_tail_pii_guard": self._create_pii_guard_plugin
-            }
-            
-            for plugin_name in enabled_plugins:
-                if plugin_name in oss_plugins:
-                    try:
-                        plugin_instance = oss_plugins[plugin_name]()
-                        self.loaded_plugins[plugin_name] = plugin_instance
-                        logger.info(f"Loaded plugin: {plugin_name}")
-                    except Exception as e:
-                        logger.error(f"Failed to load plugin {plugin_name}: {str(e)}")
-                        return False
-                else:
-                    logger.warning(f"Unknown plugin {plugin_name} - skipping")
-            
-            logger.info(f"Successfully loaded {len(self.loaded_plugins)} plugins")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Plugin loading failed: {str(e)}")
-            return False
-    
-    def get_plugin(self, name: str) -> Optional[Any]:
-        """Get a loaded plugin by name"""
-        return self.loaded_plugins.get(name)
-    
-    def get_all_plugins(self) -> Dict[str, Any]:
-        """Get all loaded plugins"""
-        return self.loaded_plugins.copy()
-    
-    def get_plugin_status(self) -> List[Dict[str, Any]]:
-        """Get status of all loaded plugins"""
-        status_list = []
-        for plugin_name, plugin in self.loaded_plugins.items():
-            if hasattr(plugin, 'get_status'):
-                status_list.append(plugin.get_status())
-            else:
-                status_list.append({
-                    "name": plugin_name,
-                    "status": "unknown",
-                    "description": "No status method available"
-                })
-        return status_list
-    
-    def _create_auth_plugin(self):
-        """Create API key authentication plugin"""
-        from database_loader import validate_api_key as db_validate
-        from config_loader import get_default_api_key
-        
-        class AuthPlugin:
-            def __init__(self):
-                self.name = "wag_tail_key_auth"
-                self.version = "4.3.0"
-                self.default_key = get_default_api_key()
-            
-            def authenticate(self, api_key: str) -> Tuple[bool, Optional[str], Optional[str]]:
-                """API key validation with database and config fallback"""
-                if not api_key:
-                    return False, None, None
+            # Import the plugin module
+            if plugin_name == "wag_tail_key_auth":
+                from wag_tail_key_auth.key_auth_plugin import WagTailKeyAuthPlugin
+                plugins.append(WagTailKeyAuthPlugin())
+            elif plugin_name == "wag_tail_basic_guard":
+                from wag_tail_basic_guard.basic_guard_plugin import WagTailBasicGuardPlugin
+                plugins.append(WagTailBasicGuardPlugin())
+            elif plugin_name == "wag_tail_pii_guard":
+                from wag_tail_pii_guard.pii_guard_plugin import WagTailPIIGuardPlugin
+                plugins.append(WagTailPIIGuardPlugin())
                 
-                # Use database validation with config fallback
-                is_valid, org, user = db_validate(api_key)
-                return is_valid, org, user
+            print(f"✅ Loaded plugin: {plugin_name}")
             
-            def get_status(self) -> Dict[str, Any]:
-                return {
-                    "name": self.name,
-                    "version": self.version,
-                    "status": "active",
-                    "description": "API key authentication"
-                }
-        
-        return AuthPlugin()
-    
-    def _create_basic_guard_plugin(self):
-        """Create basic security guard plugin"""
-        from config_loader import get_security_config
-        import re
-        
-        class BasicGuardPlugin:
-            def __init__(self):
-                self.name = "wag_tail_basic_guard"
-                self.version = "4.3.0"
-                self.security_config = get_security_config()
-                self._compile_patterns()
+        except ImportError as e:
+            print(f"⚠️  Failed to load plugin {plugin_name}: {e}")
             
-            def _compile_patterns(self):
-                """Compile regex patterns for performance"""
-                self.injection_patterns = []
-                patterns = self.security_config.get("injection_patterns", [])
-                
-                for pattern in patterns:
-                    try:
-                        compiled = re.compile(pattern, re.IGNORECASE)
-                        self.injection_patterns.append((pattern, compiled))
-                    except re.error as e:
-                        logger.warning(f"Invalid regex pattern {pattern}: {e}")
-            
-            def check_prompt(self, prompt: str) -> Dict[str, Any]:
-                """Check prompt for security violations"""
-                result = {
-                    "blocked": False,
-                    "reason": None,
-                    "pattern_matched": None,
-                    "filter_type": "regex"
-                }
-                
-                # Check length limits
-                max_length = self.security_config.get("max_prompt_length", 10000)
-                if len(prompt) > max_length:
-                    result.update({
-                        "blocked": True,
-                        "reason": f"Prompt too long ({len(prompt)} > {max_length})",
-                        "filter_type": "length"
-                    })
-                    return result
-                
-                # Check injection patterns
-                for pattern_str, pattern_re in self.injection_patterns:
-                    if pattern_re.search(prompt):
-                        result.update({
-                            "blocked": True,
-                            "reason": "Suspicious pattern detected",
-                            "pattern_matched": pattern_str
-                        })
-                        security_logger.log_blocked_request(
-                            "injection_pattern", 
-                            {"pattern": pattern_str, "prompt_length": len(prompt)}
-                        )
-                        break
-                
-                return result
-            
-            def get_status(self) -> Dict[str, Any]:
-                return {
-                    "name": self.name,
-                    "version": self.version,
-                    "status": "active",
-                    "description": "Basic regex security filters",
-                    "patterns_loaded": len(self.injection_patterns)
-                }
-        
-        return BasicGuardPlugin()
-    
-    def _create_pii_guard_plugin(self):
-        """Create PII detection and masking plugin"""
-        
-        class PIIGuardPlugin:
-            def __init__(self):
-                self.name = "wag_tail_pii_guard"
-                self.version = "4.3.0"
-                self.analyzer = None
-                self.anonymizer = None
-                self._init_presidio()
-            
-            def _init_presidio(self):
-                """Initialize Microsoft Presidio for PII detection"""
-                try:
-                    from presidio_analyzer import AnalyzerEngine
-                    from presidio_anonymizer import AnonymizerEngine
-                    
-                    self.analyzer = AnalyzerEngine()
-                    self.anonymizer = AnonymizerEngine()
-                    logger.info("Presidio PII detection initialized")
-                    
-                except ImportError:
-                    logger.warning("Presidio not available - PII detection disabled")
-                except Exception as e:
-                    logger.error(f"Failed to initialize Presidio: {e}")
-            
-            def detect_pii(self, text: str) -> Dict[str, Any]:
-                """Detect PII in text"""
-                if not self.analyzer:
-                    return {
-                        "pii_detected": False,
-                        "pii_types": [],
-                        "entities_count": 0,
-                        "confidence_scores": []
-                    }
-                
-                try:
-                    # Analyze text for PII
-                    results = self.analyzer.analyze(
-                        text=text,
-                        language="en",
-                        entities=["EMAIL_ADDRESS", "PHONE_NUMBER", "SSN", "CREDIT_CARD", "PERSON"]
-                    )
-                    
-                    pii_types = list(set([result.entity_type for result in results]))
-                    confidence_scores = [result.score for result in results]
-                    
-                    pii_result = {
-                        "pii_detected": len(results) > 0,
-                        "pii_types": pii_types,
-                        "entities_count": len(results),
-                        "confidence_scores": confidence_scores
-                    }
-                    
-                    if pii_result["pii_detected"]:
-                        security_logger.log_pii_detection(pii_types, {
-                            "entities_count": len(results),
-                            "text_length": len(text)
-                        })
-                    
-                    return pii_result
-                    
-                except Exception as e:
-                    logger.error(f"PII detection failed: {e}")
-                    return {
-                        "pii_detected": False,
-                        "pii_types": [],
-                        "entities_count": 0,
-                        "confidence_scores": []
-                    }
-            
-            def anonymize_text(self, text: str) -> str:
-                """Anonymize PII in text"""
-                if not self.analyzer or not self.anonymizer:
-                    return text
-                
-                try:
-                    # Analyze for PII
-                    results = self.analyzer.analyze(text=text, language="en")
-                    
-                    # Anonymize
-                    anonymized_result = self.anonymizer.anonymize(
-                        text=text,
-                        analyzer_results=results
-                    )
-                    
-                    return anonymized_result.text
-                    
-                except Exception as e:
-                    logger.error(f"PII anonymization failed: {e}")
-                    return text
-            
-            def get_status(self) -> Dict[str, Any]:
-                return {
-                    "name": self.name,
-                    "version": self.version,
-                    "status": "active" if self.analyzer else "inactive",
-                    "description": "PII detection and masking with Presidio",
-                    "presidio_available": self.analyzer is not None
-                }
-        
-        return PIIGuardPlugin()
-    
-    # Webhook GuardRail plugin moved to Advanced Edition only
-    # This plugin provides external security system integration and is now
-    # available exclusively in Wag-Tail Advanced Edition for enterprise customers
+    return plugins
 
-# Global plugin manager instance
-plugin_manager = PluginManager()
-
-def load_plugins() -> bool:
-    """Legacy function for compatibility with main.py"""
-    return plugin_manager.load_plugins()
-
-def get_plugin_manager() -> PluginManager:
-    """Get the global plugin manager instance"""
-    return plugin_manager
-
+def get_user_edition() -> str:
+    """Return OSS edition"""
+    return "oss"

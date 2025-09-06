@@ -11,7 +11,7 @@ import json
 from wag_tail_logger import logger
 
 
-def query(prompt, timeout=30, api_url=None, api_key=None, model="mistral:7b-instruct-q4_K_M", **kwargs):
+def query(prompt, timeout=60, api_url=None, api_key=None, model="mistral:7b-instruct-q4_K_M", **kwargs):
     """
     Query Ollama API for LLM response using OpenAI-compatible endpoint
     
@@ -72,9 +72,13 @@ def query(prompt, timeout=30, api_url=None, api_key=None, model="mistral:7b-inst
         
         if response.status_code == 200:
             data = response.json()
-            # Parse OpenAI-compatible response format
+            # Parse Ollama response format
             response_text = ""
-            if "choices" in data and len(data["choices"]) > 0:
+            if "message" in data:
+                # Ollama native format
+                response_text = data["message"].get("content", "")
+            elif "choices" in data and len(data["choices"]) > 0:
+                # OpenAI-compatible format (in case Ollama updates)
                 response_text = data["choices"][0].get("message", {}).get("content", "")
             
             # Log success

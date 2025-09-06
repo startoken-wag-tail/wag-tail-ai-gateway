@@ -4,7 +4,6 @@
 """
 Authentication utilities for API key validation with fallback strategies
 """
-import logging
 import yaml
 import os
 import time
@@ -12,8 +11,9 @@ from datetime import datetime
 from typing import Optional, Tuple, Dict
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+from wag_tail_logger import get_logger
 
-logger = logging.getLogger("wag_tail_logger")
+logger = get_logger()
 
 # In-memory cache for API keys (fallback when database is down)
 _api_key_cache = {}

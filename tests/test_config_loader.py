@@ -174,7 +174,7 @@ class TestOSSConfigurationLoader(unittest.TestCase):
         env_vars = {
             "WAGTAIL_LLM_PROVIDER": "openai",
             "WAGTAIL_LLM_MODEL": "gpt-4",
-            "OPENAI_API_KEY": "sk-test-key",
+            "OPENAI_API_KEY": "demo-openai-key",
             "WAGTAIL_LOGGING_LEVEL": "WARNING",
             "MAX_PROMPT_LENGTH": "5000",
             "DEFAULT_API_KEY": "custom-api-key"
@@ -187,7 +187,7 @@ class TestOSSConfigurationLoader(unittest.TestCase):
         # Check LLM overrides
         self.assertEqual(config["llm"]["provider"], "openai")
         self.assertEqual(config["llm"]["model"], "gpt-4")
-        self.assertEqual(config["llm"]["api_key"], "sk-test-key")
+        self.assertEqual(config["llm"]["api_key"], "demo-openai-key")
         
         # Check logging override
         self.assertEqual(config["logging"]["level"], "WARNING")

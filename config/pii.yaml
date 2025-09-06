@@ -1,14 +1,40 @@
+# PII Detection Configuration
+# This file configures the PII Guard plugin for detecting and handling personally identifiable information
+
+# List of PII entity types to detect and block/mask
 allowed_pii_types:
-  - EMAIL_ADDRESS
-  - PHONE_NUMBER
-  - CREDIT_CARD
-  - HK_ID
-  - US_PASSPORT
-  - BANK_ACCOUNT
-  - US_SSN
-  - NRIC
-  - NRIC_NUMBER
-  - IBAN_CODE
-  - PERSON
-  - IP_ADDRESS
-confidence_threshold: 0.8
+  - EMAIL_ADDRESS      # Email addresses (e.g., john@example.com)
+  - PHONE_NUMBER       # Phone numbers in various formats
+  - CREDIT_CARD        # Credit card numbers
+  - HK_ID              # Hong Kong ID numbers
+  - US_PASSPORT        # US Passport numbers
+  - BANK_ACCOUNT       # Bank account numbers
+  - US_SSN             # US Social Security Numbers
+  - NRIC               # Singapore National Registration Identity Card
+  - NRIC_NUMBER        # Alternative NRIC format
+  - IBAN_CODE          # International Bank Account Numbers
+  - PERSON             # Person names (disabled for performance)
+  - IP_ADDRESS         # IP addresses (IPv4 and IPv6)
+
+# Confidence threshold for PII detection (0.0 to 1.0)
+# Lower values = more sensitive (more false positives)
+# Higher values = less sensitive (may miss some PII)
+confidence_threshold: 0.32
+
+# Redaction settings (for semantic cache plugin)
+redaction:
+  enabled: true
+  # Rules for redacting specific patterns
+  rules:
+    - pattern: '\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+      name: email
+      replacement: '[EMAIL]'
+    - pattern: '\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
+      name: phone
+      replacement: '[PHONE]'
+    - pattern: '\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b'
+      name: credit_card
+      replacement: '[CREDIT_CARD]'
+    - pattern: '\b\d{3}-\d{2}-\d{4}\b'
+      name: ssn
+      replacement: '[SSN]'
